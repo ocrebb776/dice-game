@@ -14,6 +14,7 @@
     <style>
         html,
         body {
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0px;
             background-color: #ff0000;
         }
@@ -50,7 +51,7 @@
         .bdice {
             width: 100%;
             display: grid;
-            grid-template-rows: 5fr 1fr;
+            grid-template-rows: 1fr 5fr 1fr;
             height: 70vh;
         }
         
@@ -71,7 +72,8 @@
             min-width: 100px;
         }
         
-        button:active {
+        button:active,
+        button:disabled {
             box-shadow: 1px 1px 0px 1px #aaa;
             transform: translate(11px, 11px);
         }
@@ -95,6 +97,20 @@
         .act {
             border-inline: 5px solid red;
         }
+        
+        .popup {
+            background-color: #fff;
+            width: 90vw;
+            height: 80vh;
+            margin-top: 10vh;
+            margin-left: 5vw;
+            box-shadow: 0px 0px 10px 5px rgb(88, 88, 88);
+            z-index: -1;
+            position: fixed;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+        }
     </style>
 </head>
 
@@ -108,9 +124,12 @@
         </div>
         <div class="s">
             <div class="bdice">
+                <div>
+                    ROUND : <span id="round">1</span>
+                </div>
                 <div style="display: flex;align-items: center;justify-content: space-evenly;">
-                    <img id="1" src="img/1.svg">
-                    <img id="2" src="img/4.svg">
+                    <img id="1" src="img/dice.png">
+                    <img id="2" src="img/dice.png">
                 </div>
                 <div>
                     <button id="roll" onclick="rolled = true;console.log('change')">Roll</button>
@@ -119,19 +138,39 @@
         </div>
         <div class="s">
             <div id="pl2">
-                <div>Player 2 <br> SCORE <br> <span id="pl2s">0</span></div>
+                <div>
+                    Player 2 <br> SCORE <br>
+                    <span id="pl2s">0</span>
+                </div>
             </div>
         </div>
+    </div>
+    <div class="popup" id="popup">
+        <h1>THE WINNER WAS PLAYER <br><span id="winner">X</span><br> THERRE SCORE WAS<br><span id="wscore">X</span>pt
+        </h1>
+        <H2>THE LOOSER WAS PLAYER<br> <span id="looser">X</span><br>WITH A SCORE OF <br><span id="lscore">X</span> pt</H2>The difference was <span id="diff">X</span> pt
     </div>
 </body>
 <script>
     let roll = document.getElementById('roll')
-    let rolled = false
     let img = ['1.svg', '2.svg', '3.svg', '4.svg', '5.svg', '6.svg']
-    let dice = [document.getElementById('1'), document.getElementById('2')]
+    let dice = [
+        document.getElementById('1'),
+        document.getElementById('2')
+    ]
+    let summa = [
+        document.getElementById('popup'),
+        document.getElementById('winner'),
+        document.getElementById('wscore'),
+        document.getElementById('looser'),
+        document.getElementById('lscore'),
+        document.getElementById('diff')
+    ]
+    let rolled = false
     let scores = [0, 0]
     let rs = []
     let p = 0
+    let round = 1
     scoreb = [
         [
             document.getElementById('pl1'),
@@ -144,66 +183,94 @@
     ]
 
     let rolld = function() {
-        roll.innerHTML = "Roll"
-        rs = [Math.trunc(Math.random() * 5), Math.trunc(Math.random() * 5)]
-        console.log(rs)
-        shake(0)
-        setTimeout(function() {
-            dice[0].src = `img/${img[rs[0]]}`
-        }, 1000)
-        shake(1)
-        setTimeout(function() {
-            dice[1].src = `img/${img[rs[1]]}`
-        }, 1000)
-        setTimeout(function() {
-            rs[0] += 1
-            rs[1] += 1
-            scores[p] += rs[0] + rs[1]
+        if (round != 5) {
+            roll.innerHTML = "Roll"
+                //random number
+            rs = [Math.trunc(Math.random() * 5), Math.trunc(Math.random() * 5)]
+            dice[0].src = 'img/dice.png'
+                // shakes first dice this takes 1000ms
+            shake(0)
+                // after 1000ms it will change the face of the  first dice to the random number genarated (aysinc waits until animation is finished)
+            setTimeout(function() {
+                dice[0].src = `img/${img[rs[0]]}`
+            }, 1000)
+            dice[1].src = 'img/dice.png'
+                // shakes second dice
+            shake(1)
+                //same as before but for second dice aysinc
+            setTimeout(function() {
+                dice[1].src = `img/${img[rs[1]]}`
+            }, 1000)
+            setTimeout(function() { //completed after both aysinc things(2000 ms delay)
+                rs[0] += 1 //0-5 to 1-6 
+                rs[1] += 1
 
-            if (Math.trunc((rs[0] + rs[1]) / 2) == 0) {
-                scores[p] += 10
-            } else {
-                scores[p] -= 5
-            }
-            if (scores[p] < 0) {
-                scores[p] = 0
-            }
-            if (rs[0] == rs[1]) {
-                roll.innerHTML = "roll again"
-                checkFlag();
+                scores[p] += rs[0] + rs[1] //adds score
 
-            } else {
-                scoreb[0][p].classList.remove("act");
-                console.log('p = ' + String(p))
-                if (p == 0) {
-                    p = 1
+                if ((rs[0] + rs[1]) % 2 == 0) {
+                    scores[p] += 10 //bonus for total being even
                 } else {
-                    p = 0
+                    scores[p] -= 5 // penalty for it being odd
                 }
-                scoreb[0][p].classList.add("act");
-                console.log('p = ' + String(p))
+
+                if (scores[p] < 0) {
+                    scores[p] = 0 //makes sure that score is never negative
+                }
+
+                if (rs[0] == rs[1]) {
+                    roll.innerHTML = "roll again" //if it is a double rolled it will roll again option 
+                    rres() //reenables button
+
+                } else {
+                    scoreb[0][p].classList.remove("act"); //removes border on player
+                    if (p == 0) {
+                        p = 1
+                    } else {
+                        round += 1
+                        document.getElementById('round').innerHTML = round
+                        p = 0
+                    } //swaps playeer
+
+
+
+                }
+                scoreb[0][p].classList.add("act"); //add border on new player
+
+
+                rres() //re enables button
+                updatescores() // updates scores
+
+
+            }, 2000)
+
+        } else {
+            if (scores[0] != scores[1]) {
+                summa[0].style.display = "block" // enables new screen
+                winner() // calculates winner
             }
-
-            updatescores()
-
-        }, 2000)
-
-
+        }
     }
 
+    function rdis() {
+        roll.disabled = true
+        rolled = false
+        rolld();
+    }
 
+    function rres() {
+        checkFlag()
+        roll.disabled = false
+    }
+    //  loop for button presses
     function checkFlag() {
-        console.log(rolled)
         if (rolled === false) {
-            window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
+            window.setTimeout(checkFlag, 100);
         } else {
-            rolld();
-            rolled = false
-            checkFlag()
+            rdis()
         }
     }
     checkFlag()
-
+        // viusal
     function shake(dice) {
         var direct = ['left', 'right']
         $(`#${dice+1}`).effect("shake", {
@@ -212,10 +279,26 @@
         }, 1000);
 
     }
-
+    // updates scores either side of the play area
     function updatescores() {
         scoreb[1][0].innerHTML = scores[0]
         scoreb[1][1].innerHTML = scores[1]
+    }
+    // displays who the winner is
+    function winner() {
+        if (scores[0] > scores[1]) {
+            summa[1].innerHTML = 1
+            summa[2].innerHTML = scores[0]
+            summa[3].innerHTML = 2
+            summa[4].innerHTML = scores[1]
+            summa[5].innerHTML = scores[0] - scores[1]
+        } else {
+            summa[1].innerHTML = 2
+            summa[2].innerHTML = scores[1]
+            summa[3].innerHTML = 1
+            summa[4].innerHTML = scores[0]
+            summa[5].innerHTML = scores[1] - scores[0]
+        }
     }
 </script>
 
