@@ -8,15 +8,18 @@
     <title>Document</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js">
     </script>
-
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js">
     </script>
     <style>
+         :root {
+            --accent: #448;
+        }
+        
         html,
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0px;
-            background-color: #ff0000;
+            background-color: var(--accent);
         }
         
         .white {
@@ -95,7 +98,7 @@
         }
         
         .act {
-            border-inline: 5px solid red;
+            border-inline: 5px solid var(--accent);
         }
         
         .popup {
@@ -132,7 +135,7 @@
                     <img id="2" src="img/dice.png">
                 </div>
                 <div>
-                    <button id="roll" onclick="rolled = true;console.log('change')">Roll</button>
+                    <input id="cl" type="color" value="#444488"><button id="roll" onclick="rolled = true;console.log('change')">Roll</button>
                 </div>
             </div>
         </div>
@@ -150,8 +153,9 @@
         </h1>
         <H2>THE LOOSER WAS PLAYER<br> <span id="looser">X</span><br>WITH A SCORE OF <br><span id="lscore">X</span> pt</H2>The difference was <span id="diff">X</span> pt
     </div>
-</body>
+</body><span id="col"></span>
 <script>
+    let cl = document.getElementById('cl')
     let roll = document.getElementById('roll')
     let img = ['1.svg', '2.svg', '3.svg', '4.svg', '5.svg', '6.svg']
     let dice = [
@@ -183,7 +187,7 @@
     ]
 
     let rolld = function() {
-        if (round != 5) {
+        if (round != 6) {
             roll.innerHTML = "Roll"
                 //random number
             rs = [Math.trunc(Math.random() * 5), Math.trunc(Math.random() * 5)]
@@ -299,6 +303,10 @@
             summa[4].innerHTML = scores[0]
             summa[5].innerHTML = scores[1] - scores[0]
         }
+    }
+    cl.oninput = function() {
+        document.getElementById('col').innerHTML = `<style>:root {--accent: ${cl.value};}</style>`
+
     }
 </script>
 
